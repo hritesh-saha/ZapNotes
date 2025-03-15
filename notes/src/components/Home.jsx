@@ -21,6 +21,18 @@ const Home = () => {
     }
   }, [response]);
 
+  // Clear local storage when the tab is closed
+  useEffect(() => {
+    const handleTabClose = () => {
+      localStorage.removeItem("responseData");
+    };
+
+    window.addEventListener("beforeunload", handleTabClose);
+    return () => {
+      window.removeEventListener("beforeunload", handleTabClose);
+    };
+  }, []);
+
   // Function to handle file upload
   const handleUpload = async () => {
     if (!pdf) {

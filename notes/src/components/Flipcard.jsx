@@ -14,12 +14,12 @@ const FlipCard = ({ question, answer }) => {
         }`}
       >
         {/* Front Side (Question) */}
-        <div className="absolute w-full h-full flex items-center justify-center bg-[#6A2C70] text-white p-4 border-4 border-[#6A2C70] rounded-lg shadow-lg transform backface-hidden">
+        <div className="absolute w-full h-full flex items-center justify-center bg-[#6A0DAD] linear-gradient(135deg, #6A0DAD, #4B0082) text-white p-4 border-4 border-[#6A2C70] rounded-lg shadow-lg transform backface-hidden">
           {question}
         </div>
 
         {/* Back Side (Answer) */}
-        <div className="absolute w-full h-full flex items-center justify-center bg-[#F08A5D] text-white p-4 border-4 border-[#F08A5D] rounded-lg shadow-lg transform rotate-y-180 backface-hidden">
+        <div className="absolute w-full h-full flex items-center justify-center bg-[#FF5733] text-white p-4 border-4 border-[#F08A5D] rounded-lg shadow-lg transform rotate-y-180 backface-hidden">
           {answer}
         </div>
       </div>
