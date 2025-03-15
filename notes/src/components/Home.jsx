@@ -4,6 +4,7 @@ import UploadBox from "./UploadBox";
 import AnimatedButton from "./AnimatedButton";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Loader from "./Loader";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -13,7 +14,13 @@ const Home = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Ensure local storage is updated correctly
+  useEffect(() => {
+    if (!sessionStorage.getItem("sessionActive")) {
+      localStorage.removeItem("responseData"); // Clear stored data
+      sessionStorage.setItem("sessionActive", "true"); // Mark session as active
+    }
+  }, []);
+
   useEffect(() => {
     if (response) {
       localStorage.removeItem("responseData"); // Clear before setting new data
@@ -68,7 +75,7 @@ const Home = () => {
 
   return (
     <div className="bg-gradient-to-b from-[#2a2a3b] to-[#f09561] min-h-screen w-screen">
-      <Navbar />
+      <Navbar chapters={response}/>
       <div className="flex items-center justify-center flex-col gap-4 mt-5 px-4 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl text-[#f09561] font-bold font-[cursive]">
           📒ZapNotes
@@ -83,6 +90,10 @@ const Home = () => {
 
       {/* Upload Button */}
       <AnimatedButton handleUpload={handleUpload} loading={loading} />
+
+      { loading && (<div className="mt-8">
+        <Loader/>
+      </div>)}
 
       {/* Display Extracted Topics */}
       {response && (response.length!==0) &&  (
