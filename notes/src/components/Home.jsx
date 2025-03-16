@@ -75,7 +75,7 @@ const Home = () => {
 
   return (
     <div className="bg-gradient-to-b from-[#2a2a3b] to-[#f09561] min-h-screen w-screen">
-      <Navbar chapters={response}/>
+      <Navbar chapters={response} />
       <div className="flex items-center justify-center flex-col gap-4 mt-5 px-4 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl text-[#f09561] font-bold font-[cursive]">
           📒ZapNotes
@@ -91,20 +91,22 @@ const Home = () => {
       {/* Upload Button */}
       <AnimatedButton handleUpload={handleUpload} loading={loading} />
 
-      { loading && (<div className="mt-8">
-        <Loader/>
-      </div>)}
+      {loading && (
+        <div className="mt-8">
+          <Loader />
+        </div>
+      )}
 
       {/* Display Extracted Topics */}
-      {response && (response.length!==0) &&  (
+      {response && response.chapters && response.chapters.length > 0 && (
         <div className="flex flex-col justify-center items-center">
           <h2 className="font-[cursive] p-4 mt-4 mb-2 text-3xl text-white">
             TOPICS:
           </h2>
         </div>
       )}
-      {response && (response.length!==0) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-16 py-3 sm:place-items-center md:place-items-start">
+      {response && response.length !== 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-16 py-3 place-items-center lg:place-items-start">
           {response.chapters.map((item, index) => (
             <li
               key={index}

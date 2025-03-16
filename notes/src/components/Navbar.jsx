@@ -16,11 +16,11 @@ const Navbar = ({ chapters }) => {
   return (
     <div className='h-[10vh] px-5 py-3 border border-black shadow-sm shadow-stone-900'>
         <div className='flex justify-between h-full'>
-            <div className='text-2xl pt-1 font-bold text-[#f09561] flex flex-row-reverse font-[cursive]'>
+            <div className='text-2xl pt-0.5 lg:pt-1.5 font-bold text-[#f09561] flex flex-row-reverse font-[cursive]'>
                 <AiOutlineThunderbolt/> ZapNotes
             </div>
-            <div className='flex flex-row justify-between text-[#f09561] mr-22'>
-                <h1 className='pt-2 text-2xl hover:text-orange-600 cursor-pointer font-bold flex flex-row font-[cursive]'
+            <div className='flex flex-row justify-between text-[#f09561] mr-6 md:mr-22'>
+                <h1 className='pt-1 lg:pt-2 text-2xl hover:text-orange-600 cursor-pointer font-bold flex flex-row font-[cursive]'
                 onClick={handleQuizClick}>
                     <MdQuiz className='mt-1 mr-2 '/>Quiz
                 </h1>

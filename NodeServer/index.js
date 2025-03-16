@@ -8,19 +8,23 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors({ origin: "*" }));
+// ✅ Enable CORS for frontend requests
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
+// ✅ Multer configuration for handling file uploads
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-const api_key=process.env.GEMINI_API_KEY
+const upload = multer({ storage });
 
-const genAI = new GoogleGenerativeAI(api_key);
+// ✅ Initialize Google Generative AI
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey);
 
-app.get("/",async(req,res)=>{
+app.get("/", (req, res) => {
     res.send("Hello from ZapNotes!");
-})
+});
 
+// ✅ Convert PDF Buffer to Base64
 const convertPDFToBase64 = (pdfBuffer) => {
     try {
         return pdfBuffer.toString("base64");
@@ -30,25 +34,19 @@ const convertPDFToBase64 = (pdfBuffer) => {
     }
 };
 
-app.post("/extract-qa-from-pdf", upload.single("file"), async (req, res) => {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+// ✅ Extract QA Pairs from PDF
+const extractQAFromPDF = async (base64PDF) => {
+    const prompt = `
+        Extract only meaningful and practical question-answer pairs from the given PDF document.
+        Do NOT include introductions or explanations. Only return data in plain text.
+        Format chapters as 'Chapter X: [Title]'.
+        For each chapter, provide exactly 10 diverse question-answer pairs that help in understanding the topic.
+        Each question should start with 'Q:' and each answer should start with 'A:'.
+        Ensure questions are diverse and concept-driven.
+    `;
 
     try {
-        const base64PDF = convertPDFToBase64(req.file.buffer);
-        console.log("Base64 PDF Output:", base64PDF.substring(0, 100))
-        if (!base64PDF) throw new Error("Failed to convert PDF to Base64.");
-
-        // ✅ Send Base64 PDF to Gemini AI
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-        const prompt = `
-            Extract only meaningful and practical question-answer pairs from the given PDF document.
-            Do NOT include introductions or explanations. Only return data in plain text.
-            Format chapters as 'Chapter X: [Title]'.
-            For each chapter, provide exactly 10 diverse question-answer pairs that help in understanding the topic.
-            Each question should start with 'Q:' and each answer should start with 'A:'.
-            Ensure questions are diverse and concept-driven.
-        `;
 
         const result = await model.generateContent({
             contents: [
@@ -63,18 +61,18 @@ app.post("/extract-qa-from-pdf", upload.single("file"), async (req, res) => {
         });
 
         const aiResponse = result.response.text();
-        console.log(aiResponse);
+        console.log("AI Raw Output:", aiResponse.substring(0, 500));
+
         if (!aiResponse) throw new Error("AI did not return a valid response.");
 
-        const structuredFlashcards = processAIResponse(aiResponse);
-
-        res.json({ chapters: structuredFlashcards });
-
+        return processAIResponse(aiResponse);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Error extracting QA from PDF:", error);
+        throw error;
     }
-});
+};
 
+// ✅ Process AI Response into structured format
 const processAIResponse = (aiText) => {
     const chapters = [];
     let currentChapter = null;
@@ -103,14 +101,12 @@ const processAIResponse = (aiText) => {
             questions.push(questionMatch[1].trim());
         }
 
-
         const answerMatch = line.match(answerPattern);
         if (answerMatch) {
             answers.push(answerMatch[1].trim());
         }
     });
 
- 
     if (currentChapter && questions.length > 0 && answers.length > 0) {
         chapters.push({ chapter: currentChapter, questions, answers });
     }
@@ -118,4 +114,20 @@ const processAIResponse = (aiText) => {
     return chapters;
 };
 
-app.listen(port, () => console.log(`Server running`));
+// ✅ Endpoint: Extract QA from PDF
+app.post("/extract-qa-from-pdf", upload.single("file"), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+
+    try {
+        const base64PDF = convertPDFToBase64(req.file.buffer);
+        if (!base64PDF) throw new Error("Failed to convert PDF to Base64.");
+
+        const structuredFlashcards = await extractQAFromPDF(base64PDF);
+
+        res.json({ chapters: structuredFlashcards });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
