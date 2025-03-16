@@ -17,6 +17,10 @@ const api_key=process.env.GEMINI_API_KEY
 
 const genAI = new GoogleGenerativeAI(api_key);
 
+app.get("/",async(req,res)=>{
+    res.send("Hello from ZapNotes!");
+})
+
 const convertPDFToBase64 = (pdfBuffer) => {
     try {
         return pdfBuffer.toString("base64");
