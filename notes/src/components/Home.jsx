@@ -14,6 +14,9 @@ const Home = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  const backend_url=import.meta.env.VITE_BACKEND_URL;
+  console.log(backend_url)
+
   useEffect(() => {
     if (!sessionStorage.getItem("sessionActive")) {
       localStorage.removeItem("responseData"); // Clear stored data
@@ -55,7 +58,7 @@ const Home = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "http://localhost:8000/extract-qa-from-pdf",
+        `${backend_url}/extract-qa-from-pdf`,
         formData,
         {
           headers: {

@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  backend:
+    image: hriteshsaha4/zapnotes-backend:dev
+    container_name: zapnotes-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=your_actual_key_here  # 👈 Set your backend env var here
+    networks:
+      - zapnet
+
+  frontend:
+    image: hriteshsaha4/zapnotes-frontend:dev
+    container_name: zapnotes-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - zapnet
+
+networks:
+  zapnet:
+    driver: bridge
