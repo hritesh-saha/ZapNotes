@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # fetch full commit history for git diff to work
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -39,10 +41,17 @@ jobs:
         id: changes
         run: |
           echo "Checking for changes in ${{ matrix.path }}"
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep "^${{ matrix.path }}/"; then
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "First commit detected, forcing build"
             echo "changed=true" >> $GITHUB_OUTPUT
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep "^${{ matrix.path }}/"; then
+              echo "Changes detected in ${{ matrix.path }}"
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "No changes detected in ${{ matrix.path }}"
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Build and Push ${{ matrix.image }}:dev
