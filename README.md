@@ -148,16 +148,34 @@ You can run both the frontend and backend services together using the provided `
 
 2. Make sure Docker and Docker Compose are installed on your system.
 
-3. From the root directory (where the `docker-compose.yml` file is located), run:
+3. **Set your Gemini API Key in the `docker-compose.yml` file**:  
+   Before running the containers, open the `docker-compose.yml` file and add your Gemini API key as an environment variable under the backend service. For example:
+
+    ```yaml
+    services:
+      backend:
+        image: hriteshsaha4/zapnotes-backend:dev
+        container_name: zapnotes-backend
+        ports:
+          - "8000:8000"
+        environment:
+          - GEMINI_API_KEY=your_actual_key_here  # 👈 Set your backend env var here
+        networks:
+          - zapnet
+
+    ```
+
+4. From the root directory (where the `docker-compose.yml` file is located), run:
     ```bash
     docker-compose up -d
     ```
 
-4. Once the containers start, open your browser and navigate to:
+5. Once the containers start, open your browser and navigate to:
     ```
-    http://localhost:5713
+    http://localhost:5173
     ```
     This loads the ZapNotes frontend, which communicates with the FastAPI backend inside Docker.
+
 
 ### 🛑 Stopping the Application
 
