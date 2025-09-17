@@ -17,7 +17,6 @@ const Home = () => {
   const [extractionType, setExtractionType] = useState("chapters");
 
   const backend_url=import.meta.env.VITE_BACKEND_URL;
-  console.log(backend_url)
 
   useEffect(() => {
     if (!sessionStorage.getItem("sessionActive")) {
