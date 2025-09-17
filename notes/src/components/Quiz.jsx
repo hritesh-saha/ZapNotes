@@ -90,7 +90,7 @@ const Quiz = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✨ 1. Destructure 'type' and 'data' from the new state object
+  // Destructure 'type' and 'data' from the new state object
   const { type, data } = location.state || { type: "", data: [] };
 
   const [allQuestions, setAllQuestions] = useState([]);
@@ -109,7 +109,7 @@ const Quiz = () => {
     }
   }, [data]);
 
-  // ✨ 2. A function to shuffle and select a new set of questions
+  // A function to shuffle and select a new set of questions
   const generateNewQuiz = useCallback(() => {
     if (allQuestions.length > 0) {
       const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
@@ -122,7 +122,7 @@ const Quiz = () => {
     generateNewQuiz();
   }, [allQuestions, generateNewQuiz]);
 
-  // ✨ 3. Create a dynamic title based on the 'type'
+  // Create a dynamic title based on the 'type'
   const quizTitle =
     type === "chapters" ? "Chapters Revision Quiz" : "Topics Revision Quiz";
 

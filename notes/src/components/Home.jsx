@@ -72,7 +72,7 @@ const Home = () => {
           },
         }
       );
-      console.log("API Response:", res.data);
+      // console.log("API Response:", res.data);
       setResponse(res.data);
     } catch (error) {
       console.error("Error uploading file:", error);
