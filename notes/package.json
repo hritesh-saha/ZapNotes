@@ -12,7 +12,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.24.1",
     "@tailwindcss/vite": "^4.0.9",
-    "axios": "^1.8.3",
+    "axios": "^1.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
@@ -32,5 +32,8 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^4.0.9",
     "vite": "^6.2.7"
+  },
+  "overrides": {
+    "form-data": "4.0.4"
   }
 }
