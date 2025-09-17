@@ -1,44 +1,49 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const Loader = () => {
+  const loadingMessages = [
+    "Analyzing PDF...",
+    "Extracting key topics...",
+    "Building flashcards...",
+    "Just a moment...",
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      // The modulo operator (%) ensures the index loops back to 0
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
+    }, 5000); // Change text every 5s
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
-    <div className="relative w-32 h-24 mx-auto">
-      {/* Bouncing Ball */}
-      {/* <div className="absolute bottom-8 left-[50px] h-8 w-8 bg-[#FF5733] rounded-full animate-bounce" /> */}
-      <div
-        className="absolute bottom-11 left-[50px] h-8 w-8 bg-[#FF5733] rounded-full"
-        style={{ animation: "bounceHigher 1s ease-in-out infinite" }}
-      />
-      
-      {/* Steps */}
-      <div
-        className="absolute right-0 top-0 h-[7px] w-[45px] rounded-md shadow-[0_5px_0_#f2f2f2,-35px_50px_0_#f2f2f2,-70px_95px_0_#f2f2f2] animate-[loading-step_1s_ease-in-out_infinite]"
-      />
+    <div className="flex flex-col items-center justify-center gap-4">
+      <div className="relative h-24 w-24">
+        <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f09561]"></div>
+        <div className="absolute inset-0 h-full w-full animate-spin rounded-full border-2 border-transparent border-t-[#f09561] [animation-duration:1s]"></div>
+        <div className="absolute inset-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] animate-reverse-spin rounded-full border-2 border-transparent border-t-white/80 [animation-duration:1.5s]"></div>
+        <div className="absolute inset-4 h-[calc(100%-2rem)] w-[calc(100%-2rem)] animate-spin rounded-full border-2 border-transparent border-t-white/60 [animation-duration:2.5s]"></div>
+      </div>
+
+      <p className="font-[cursive] text-lg text-white animate-pulse">
+        {loadingMessages[currentIndex]}
+      </p>
 
       <style>
-        {`@keyframes bounceHigher {
-            0%, 100% {
-              transform: translateY(0);
-              animation-timing-function: cubic-bezier(0.8,0,1,1);
+        {`
+          @keyframes reverse-spin {
+            from {
+              transform: rotate(360deg);
             }
-            50% {
-              transform: translateY(-40px); /* increased bounce height */
-              animation-timing-function: cubic-bezier(0,0,0.2,1);
+            to {
+              transform: rotate(0deg);
             }
           }
-          @keyframes loading-step {
-            0% {
-              box-shadow: 0 10px 0 rgba(0, 0, 0, 0),
-                0 10px 0 #f2f2f2,
-                -35px 50px 0 #f2f2f2,
-                -70px 90px 0 #f2f2f2;
-            }
-            100% {
-              box-shadow: 0 10px 0 #f2f2f2,
-                -35px 50px 0 #f2f2f2,
-                -70px 90px 0 #f2f2f2,
-                -70px 90px 0 rgba(0, 0, 0, 0);
-            }
+          .animate-reverse-spin {
+            animation: reverse-spin linear infinite;
           }
         `}
       </style>
