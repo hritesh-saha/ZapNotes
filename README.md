@@ -201,6 +201,22 @@ docker-compose logs -f
 - Shows only **past logs** up to the point when the command is run.
 - The command then **exits immediately**, without streaming further logs.
 
+## 🛡️ Project Monitoring with SysGuardian
+
+To ensure the reliability, security, and uptime of the deployed Zapnotes application, I am using a custom-built monitoring tool called **SysGuardian**.
+
+This is a comprehensive Bash script that runs automatically on the EC2 server, performing regular health checks and security audits. It immediately alerts me to any potential issues by sending a full report as a push notification to my phone using `ntfy.sh`.
+
+Key features of the `SysGuardian` script include:
+* 📊 **Resource Monitoring:** Tracks CPU, memory, and disk usage against critical thresholds.
+* 🔐 **Security Audits:** Analyzes `auth.log` for failed login attempts and flags unknown/suspicious IPs.
+* 🌐 **Network Monitoring:** Lists all active TCP/UDP connections.
+* ⏱️ **Uptime Checks:** Reports the server's current uptime and load average.
+
+This proactive monitoring strategy ensures that any performance bottlenecks or security threats are identified and handled immediately.
+
+You can view the `SysGuardian` project and its source code [in its own GitHub repository here](https://github.com/hritesh-saha/SysGuardian).
+
 
 <p align="center"><a href="https://github.com/hritesh-saha/ZapNotes/blob/main/LICENSE"><img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=BSD-3-Clause&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"/></a></p>
 
