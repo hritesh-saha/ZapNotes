@@ -40,7 +40,7 @@ def extract_flashcards_from_text(document_text: str, mode: str = "topic") -> Dic
     )
 
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash",generation_config={"temperature": 0.4,"top_p": 0.9,})
         # We send the prompt and the extracted text directly
         response = model.generate_content([prompt, document_text])
 
