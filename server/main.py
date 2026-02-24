@@ -60,10 +60,20 @@ def get_text_from_uploadfile(file: UploadFile) -> str:
         raise HTTPException(status_code=400, detail=f"Error processing PDF file: {e}")
 
 
+MAX_FILE_SIZE = 10 * 1024 * 1024
+
 # --- ENDPOINT 1: FOR "CHAPTERS" ---
 @app.post("/extract-qa-from-pdf", response_model=FlashcardsResponse)
 @limiter.limit("3/minute") # the rate limit decorator
 async def process_pdf(request: Request, file: UploadFile = File(...)):
+    
+    if not file.content_type == "application/pdf":
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload in PDF format.")
+    
+    # Check file size immediately
+    if file.size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File is too large. Maximum allowed size is 10MB.")
+    
     document_text = get_text_from_uploadfile(file)
     if not document_text:
         raise HTTPException(status_code=400, detail="Could not extract text from PDF.")
@@ -91,7 +101,11 @@ async def process_pdf(request: Request, file: UploadFile = File(...)):
 @limiter.limit("3/minute") # the rate limit decorator
 async def process_pdf_for_topics(request: Request, file: UploadFile = File(...)):
     if not file.content_type == "application/pdf":
-        raise HTTPException(status_code=400, detail="Invalid file type.")
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload in PDF format.")
+    
+    # Check file size immediately
+    if file.size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File is too large. Maximum allowed size is 10MB.")
         
     document_text = get_text_from_uploadfile(file)
     if not document_text:

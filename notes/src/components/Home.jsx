@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "./Navbar";
 import UploadBox from "./UploadBox";
 import AnimatedButton from "./AnimatedButton";
@@ -15,8 +15,9 @@ const Home = () => {
   });
   const [loading, setLoading] = useState(false);
   const [extractionType, setExtractionType] = useState("chapters");
+  const requestHistoryRef = useRef([]);
 
-  const backend_url=import.meta.env.VITE_BACKEND_URL;
+  const backend_url = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     if (!sessionStorage.getItem("sessionActive")) {
@@ -51,6 +52,37 @@ const Home = () => {
       return;
     }
 
+    // --- PERSISTENT FRONTEND RATE LIMITING LOGIC ---
+    const now = Date.now();
+    const oneMinuteAgo = now - 60000;
+
+    // 1. Retrieve previous timestamps from localStorage (or an empty array if none exist)
+    const storedHistory =
+      JSON.parse(localStorage.getItem("uploadHistory")) || [];
+
+    // 2. Filter out any timestamps that are older than 60 seconds
+    const recentRequests = storedHistory.filter(
+      (timestamp) => timestamp > oneMinuteAgo,
+    );
+
+    // 3. Check if they have hit the limit of 3
+    if (recentRequests.length >= 3) {
+      // Calculate remaining wait time
+      const timeToWait = Math.ceil((recentRequests[0] - oneMinuteAgo) / 1000);
+      alert(
+        `Limit reached. Please wait ${timeToWait} seconds before trying again.`,
+      );
+
+      // Update localStorage anyway to clean out the old timestamps
+      localStorage.setItem("uploadHistory", JSON.stringify(recentRequests));
+      return;
+    }
+
+    // 4. Record the current request and save the updated array to localStorage
+    const updatedHistory = [...recentRequests, now];
+    localStorage.setItem("uploadHistory", JSON.stringify(updatedHistory));
+    // -----------------------------------------------
+
     localStorage.removeItem("responseData"); // Clear previous response before making a new request
 
     const formData = new FormData();
@@ -63,21 +95,23 @@ const Home = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post(
-        `${backend_url}${endpoint}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const res = await axios.post(`${backend_url}${endpoint}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       // console.log("API Response:", res.data);
       setResponse(res.data);
     } catch (error) {
       console.error("Error uploading file:", error);
+
+      // Optional: If the request completely fails (e.g., network error),
+      // you could remove the last timestamp so it doesn't count against their quota.
+
       if (error.response && error.response.status === 429) {
-        alert("You are uploading too fast! Please wait a minute and try again.");
+        alert(
+          "You are uploading too fast! Please wait a minute and try again.",
+        );
       } else {
         alert("File upload failed. Please try again.");
       }
@@ -85,6 +119,46 @@ const Home = () => {
       setLoading(false);
     }
   };
+  // const handleUpload = async () => {
+  //   if (!pdf) {
+  //     alert("Please upload a PDF first.");
+  //     return;
+  //   }
+
+  //   localStorage.removeItem("responseData"); // Clear previous response before making a new request
+
+  //   const formData = new FormData();
+  //   formData.append("file", pdf);
+
+  //   const endpoint =
+  //     extractionType === "chapters"
+  //       ? "/extract-qa-from-pdf"
+  //       : "/extract-topics-from-pdf";
+
+  //   try {
+  //     setLoading(true);
+  //     const res = await axios.post(
+  //       `${backend_url}${endpoint}`,
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       }
+  //     );
+  //     // console.log("API Response:", res.data);
+  //     setResponse(res.data);
+  //   } catch (error) {
+  //     console.error("Error uploading file:", error);
+  //     if (error.response && error.response.status === 429) {
+  //       alert("You are uploading too fast! Please wait a minute and try again.");
+  //     } else {
+  //       alert("File upload failed. Please try again.");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const dropdownOptions = [
     { value: "chapters", label: "Multiple Chapters" },
@@ -157,7 +231,7 @@ const Home = () => {
         </div>
       )}
 
-      {response && response?.topics && response?.topics.length > 0  && (
+      {response && response?.topics && response?.topics.length > 0 && (
         <div className="flex flex-col justify-center items-center">
           <h2 className="font-[cursive] p-4 mt-4 mb-2 text-3xl text-white">
             CHAPTERS:

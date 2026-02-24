@@ -3,6 +3,7 @@ import google.generativeai as genai
 import re
 from dotenv import load_dotenv
 from typing import Dict, List
+import logging
 
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception
 
