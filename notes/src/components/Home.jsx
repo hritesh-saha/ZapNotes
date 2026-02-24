@@ -76,7 +76,11 @@ const Home = () => {
       setResponse(res.data);
     } catch (error) {
       console.error("Error uploading file:", error);
-      alert("File upload failed. Please try again.");
+      if (error.response && error.response.status === 429) {
+        alert("You are uploading too fast! Please wait a minute and try again.");
+      } else {
+        alert("File upload failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

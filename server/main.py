@@ -1,13 +1,24 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import fitz  # <-- IMPORT PyMuPDF
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 # Import only the new function from your extractor
 from qa_extractor import extract_flashcards_from_text
 
+# Initialize the Limiter using the client's IP address
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI()
+
+# the limiter to the app state and register the exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Your CORS middleware remains the same...
 app.add_middleware(
@@ -51,13 +62,18 @@ def get_text_from_uploadfile(file: UploadFile) -> str:
 
 # --- ENDPOINT 1: FOR "CHAPTERS" ---
 @app.post("/extract-qa-from-pdf", response_model=FlashcardsResponse)
-async def process_pdf(file: UploadFile = File(...)):
+@limiter.limit("3/minute") # the rate limit decorator
+async def process_pdf(request: Request, file: UploadFile = File(...)):
     document_text = get_text_from_uploadfile(file)
     if not document_text:
         raise HTTPException(status_code=400, detail="Could not extract text from PDF.")
 
     # Call the new, powerful function
     concepts_dict = extract_flashcards_from_text(document_text)
+
+    # Check for upstream Gemini rate limit
+    if "RateLimitError" in concepts_dict:
+        raise HTTPException(status_code=429, detail=concepts_dict["RateLimitError"]["answers"][0])
 
     if "Error" in concepts_dict:
         raise HTTPException(status_code=500, detail=concepts_dict["Error"]["answers"][0])
@@ -72,7 +88,8 @@ async def process_pdf(file: UploadFile = File(...)):
 
 # --- ENDPOINT 2: FOR "TOPICS" ---
 @app.post("/extract-topics-from-pdf", response_model=TopicsResponse)
-async def process_pdf_for_topics(file: UploadFile = File(...)):
+@limiter.limit("3/minute") # the rate limit decorator
+async def process_pdf_for_topics(request: Request, file: UploadFile = File(...)):
     if not file.content_type == "application/pdf":
         raise HTTPException(status_code=400, detail="Invalid file type.")
         
@@ -82,6 +99,10 @@ async def process_pdf_for_topics(file: UploadFile = File(...)):
 
     # Call the SAME new, powerful function
     concepts_dict = extract_flashcards_from_text(document_text)
+
+    # Check for upstream Gemini rate limit
+    if "RateLimitError" in concepts_dict:
+        raise HTTPException(status_code=429, detail=concepts_dict["RateLimitError"]["answers"][0])
 
     if "Error" in concepts_dict:
         raise HTTPException(status_code=500, detail=concepts_dict["Error"]["answers"][0])
@@ -94,7 +115,8 @@ async def process_pdf_for_topics(file: UploadFile = File(...)):
     return TopicsResponse(topics=topics_list)
 
 @app.get("/")
-async def root():
+@limiter.limit("10/minute")
+async def root(request: Request):
     return {"message": "Welcome to ZapNotes"}
 
 # Run using: uvicorn main:app --reload

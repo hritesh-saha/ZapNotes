@@ -4,9 +4,35 @@ import re
 from dotenv import load_dotenv
 from typing import Dict, List
 
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception
+
+# Set up logging so you can see retries in your terminal
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
+
+# function that checks if the error is a rate limit
+def is_rate_limit(exception):
+    error_msg = str(exception).lower()
+    return "429" in error_msg or "resourceexhausted" in error_msg or "quota" in error_msg
+
+def before_retry_log(retry_state):
+    if retry_state.attempt_number > 1:
+        logger.warning(f"Gemini API overloaded. Retrying... Attempt #{retry_state.attempt_number}")
+
+@retry(
+    retry=retry_if_exception(is_rate_limit),
+    wait=wait_exponential(multiplier=2, min=4, max=30), # Waits 4s, 8s, 16s, up to 30s
+    stop=stop_after_attempt(5),                         # Gives up completely after 5 tries
+    before=before_retry_log,
+    reraise=True                                        # Passes the final error back down if it fails 5 times
+)
+def generate_with_retry(model, prompt, document_text):
+    """Isolated function so Tenacity knows exactly what to retry."""
+    return model.generate_content([prompt, document_text])
 
 def extract_flashcards_from_text(document_text: str, mode: str = "topic") -> Dict[str, Dict[str, List[str]]]:
     """
@@ -42,7 +68,8 @@ def extract_flashcards_from_text(document_text: str, mode: str = "topic") -> Dic
     try:
         model = genai.GenerativeModel("gemini-2.5-flash",generation_config={"temperature": 0.4,"top_p": 0.9,})
         # We send the prompt and the extracted text directly
-        response = model.generate_content([prompt, document_text])
+        # response = model.generate_content([prompt, document_text])
+        response = generate_with_retry(model, prompt, document_text)
 
         if not response or not hasattr(response, "text") or not response.text.strip():
             return {"Error": {"questions": [], "answers": ["Error: The AI did not return a valid response."]}}
@@ -81,5 +108,11 @@ def extract_flashcards_from_text(document_text: str, mode: str = "topic") -> Dic
         return results
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return {"Error": {"questions": [], "answers": [f"Error: {str(e)}"]}}
+        error_msg = str(e)
+        print(f"An error occurred: {error_msg}")
+        
+        # --- 3. DETECT 429 AND RETURN A SPECIFIC KEY ---
+        if "429" in error_msg or "ResourceExhausted" in error_msg or "quota" in error_msg.lower():
+            return {"RateLimitError": {"questions": [], "answers": ["Upstream AI is overloaded. Please try again later."]}}
+            
+        return {"Error": {"questions": [], "answers": [f"Error: {error_msg}"]}}
