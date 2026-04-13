@@ -12,7 +12,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.24.1",
     "@tailwindcss/vite": "^4.0.9",
-    "axios": "^1.13.5",
+    "axios": "^1.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
@@ -31,10 +31,14 @@
     "globals": "^15.15.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.0.9",
-    "vite": "^6.2.7"
+    "vite": "^6.4.2"
   },
   "overrides": {
     "form-data": "4.0.4",
-    "react-router": "^7.12.0"
+    "react-router": "^7.12.0",
+    "rollup": "^4.59.0",
+    "flatted": "^3.4.2",
+    "picomatch": "^4.0.4",
+    "minimatch": "^3.1.3"
   }
 }
